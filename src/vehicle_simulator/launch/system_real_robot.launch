@@ -5,12 +5,17 @@
   <arg name="vehicleY" default="0"/>
   <arg name="checkTerrainConn" default="false"/>
 
+  <arg name="linear_scale" default="0.3"/>
+  <arg name="angular_scale" default="0.6"/>
+
   <include file="$(find ps3joy)/launch/ps3.launch" />
 
   <include file="$(find local_planner)/launch/local_planner.launch" >
     <arg name="cameraOffsetZ" value="$(arg cameraOffsetZ)"/>
     <arg name="goalX" value="$(arg vehicleX)"/>
-    <arg name="goalY" value="$(arg vehicleY)"/>
+
+    <arg name="linear_scale" value="$(arg linear_scale)"/>
+  	<arg name="angular_scale" value="$(arg angular_scale)"/>
   </include>
 
   <include file="$(find terrain_analysis)/launch/terrain_analysis.launch" />

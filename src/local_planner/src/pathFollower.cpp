@@ -93,6 +93,9 @@ double switchTime = 0;
 
 bool joy_control_auto = false;
 
+double linear_scale = 1.0;
+double angular_scale = 1.0;
+
 nav_msgs::Path path;
 
 void odomHandler(const nav_msgs::Odometry::ConstPtr& odomIn)
@@ -222,6 +225,10 @@ int main(int argc, char** argv)
   nhPrivate.getParam("autonomySpeed", autonomySpeed);
   nhPrivate.getParam("joyToSpeedDelay", joyToSpeedDelay);
 
+  nhPrivate.getParam("linear_scale", linear_scale);
+  nhPrivate.getParam("angular_scale", angular_scale);
+  cout << "linear_scale:" << linear_scale << " angular_scale:" << angular_scale << endl;
+
   ros::Subscriber subOdom = nh.subscribe<nav_msgs::Odometry> ("/state_estimation", 5, odomHandler);
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
@@ -342,8 +349,8 @@ int main(int argc, char** argv)
       if (pubSkipCount < 0) {
         // cmd_vel.header.stamp = ros::Time().fromSec(odomTime);
         if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.linear.x = 0;
-        else cmd_vel.linear.x = vehicleSpeed;
-        cmd_vel.angular.z = vehicleYawRate;
+        else cmd_vel.linear.x = vehicleSpeed * linear_scale ;
+        cmd_vel.angular.z = vehicleYawRate * angular_scale ;
 
         if (joy_control_auto == true){
           pubSpeed.publish(cmd_vel);

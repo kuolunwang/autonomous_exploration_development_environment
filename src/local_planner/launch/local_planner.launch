@@ -11,6 +11,9 @@
   <arg name="goalX" default="0"/>
   <arg name="goalY" default="0"/>
 
+  <arg name="linear_scale" default="1"/>
+  <arg name="angular_scale" default="1"/>
+
   <node pkg="local_planner" type="localPlanner" name="localPlanner" output="screen" required="true">
     <param name="pathFolder" type="string" value="$(find local_planner)/paths" />
     <param name="vehicleLength" type="double" value="0.6" />
@@ -82,6 +85,9 @@
     <param name="autonomyMode" value="$(arg autonomyMode)" />
     <param name="autonomySpeed" value="$(arg autonomySpeed)" />
     <param name="joyToSpeedDelay" value="$(arg joyToSpeedDelay)" />
+
+    <param name="linear_scale" type="double" value="$(arg linear_scale)" />
+    <param name="angular_scale" type="double" value="$(arg angular_scale)" />
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="vehicleTransPublisher" args="-$(arg sensorOffsetX) -$(arg sensorOffsetY) 0 0 0 0 /sensor /vehicle 1000"/>
