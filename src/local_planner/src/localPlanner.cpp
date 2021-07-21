@@ -12,7 +12,7 @@
 #include <std_msgs/Float32.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -206,39 +206,51 @@ void terrainCloudHandler(const sensor_msgs::PointCloud2ConstPtr& terrainCloud2)
   }
 }
 
-void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
+// void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
+// {
+  // joyTime = ros::Time::now().toSec();
+
+  // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
+  // joySpeed = joySpeedRaw;
+  // if (joySpeed > 1.0) joySpeed = 1.0;
+  // if (joy->axes[4] == 0) joySpeed = 0;
+  //
+  // if (joySpeed > 0) {
+  //   joyDir = atan2(joy->axes[3], joy->axes[4]) * 180 / PI;
+  //   if (joy->axes[4] < 0) joyDir *= -1;
+  // }
+  //
+  // if (joy->axes[4] < 0 && !twoWayDrive) joySpeed = 0;
+
+  // if (joy->axes[2] > -0.1) {
+  //   autonomyMode = false;
+  // } else {
+  //   autonomyMode = true;
+  // }
+  // if (joy->buttons[7] == 1) {
+  //   if (autonomyMode == false){
+  //     autonomyMode = true;
+  //     cout<<"go auto"<<endl;
+  //   }
+  // }
+  // if (joy->buttons[6] == 1) {
+  //   if (autonomyMode == true){
+  //     autonomyMode = false;
+  //     cout<<"go manual"<<endl;
+  //   }
+  // }
+
+  // if (joy->axes[5] > -0.1) {
+  //   checkObstacle = true;
+  // } else {
+  //   checkObstacle = false;
+  // }
+// }
+
+void goalHandler(const geometry_msgs::PoseStamped::ConstPtr& goal)
 {
-  joyTime = ros::Time::now().toSec();
-
-  joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
-  joySpeed = joySpeedRaw;
-  if (joySpeed > 1.0) joySpeed = 1.0;
-  if (joy->axes[4] == 0) joySpeed = 0;
-
-  if (joySpeed > 0) {
-    joyDir = atan2(joy->axes[3], joy->axes[4]) * 180 / PI;
-    if (joy->axes[4] < 0) joyDir *= -1;
-  }
-
-  if (joy->axes[4] < 0 && !twoWayDrive) joySpeed = 0;
-
-  if (joy->axes[2] > -0.1) {
-    autonomyMode = false;
-  } else {
-    autonomyMode = true;
-  }
-
-  if (joy->axes[5] > -0.1) {
-    checkObstacle = true;
-  } else {
-    checkObstacle = false;
-  }
-}
-
-void goalHandler(const geometry_msgs::PointStamped::ConstPtr& goal)
-{
-  goalX = goal->point.x;
-  goalY = goal->point.y;
+  goalX = goal->pose.position.x;
+  goalY = goal->pose.position.y;
 }
 
 void speedHandler(const std_msgs::Float32::ConstPtr& speed)
@@ -545,9 +557,9 @@ int main(int argc, char** argv)
   ros::Subscriber subTerrainCloud = nh.subscribe<sensor_msgs::PointCloud2>
                                     ("/terrain_map", 5, terrainCloudHandler);
 
-  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
+  // ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
 
-  ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PointStamped> ("/way_point", 5, goalHandler);
+  ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PoseStamped> ("/move_base_simple/goal", 5, goalHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
 
@@ -656,9 +668,9 @@ int main(int argc, char** argv)
 
       int boundaryCloudSize = boundaryCloud->points.size();
       for (int i = 0; i < boundaryCloudSize; i++) {
-        point.x = ((boundaryCloud->points[i].x - vehicleX) * cosVehicleYaw 
+        point.x = ((boundaryCloud->points[i].x - vehicleX) * cosVehicleYaw
                 + (boundaryCloud->points[i].y - vehicleY) * sinVehicleYaw);
-        point.y = (-(boundaryCloud->points[i].x - vehicleX) * sinVehicleYaw 
+        point.y = (-(boundaryCloud->points[i].x - vehicleX) * sinVehicleYaw
                 + (boundaryCloud->points[i].y - vehicleY) * cosVehicleYaw);
         point.z = boundaryCloud->points[i].z;
         point.intensity = boundaryCloud->points[i].intensity;
@@ -671,9 +683,9 @@ int main(int argc, char** argv)
 
       int addedObstaclesSize = addedObstacles->points.size();
       for (int i = 0; i < addedObstaclesSize; i++) {
-        point.x = ((addedObstacles->points[i].x - vehicleX) * cosVehicleYaw 
+        point.x = ((addedObstacles->points[i].x - vehicleX) * cosVehicleYaw
                 + (addedObstacles->points[i].y - vehicleY) * sinVehicleYaw);
-        point.y = (-(addedObstacles->points[i].x - vehicleX) * sinVehicleYaw 
+        point.y = (-(addedObstacles->points[i].x - vehicleX) * sinVehicleYaw
                 + (addedObstacles->points[i].y - vehicleY) * cosVehicleYaw);
         point.z = addedObstacles->points[i].z;
         point.intensity = addedObstacles->points[i].intensity;
@@ -742,7 +754,7 @@ int main(int argc, char** argv)
               float x2 = cos(rotAng) * x + sin(rotAng) * y;
               float y2 = -sin(rotAng) * x + cos(rotAng) * y;
 
-              float scaleY = x2 / gridVoxelOffsetX + searchRadius / gridVoxelOffsetY 
+              float scaleY = x2 / gridVoxelOffsetX + searchRadius / gridVoxelOffsetY
                              * (gridVoxelOffsetX - x2) / gridVoxelOffsetX;
 
               int indX = int((gridVoxelOffsetX + gridVoxelSize / 2 - x2) / gridVoxelSize);
@@ -763,7 +775,7 @@ int main(int argc, char** argv)
             }
           }
 
-          if (dis < diameter / pathScale && (fabs(x) > vehicleLength / pathScale / 2.0 || fabs(y) > vehicleWidth / pathScale / 2.0) && 
+          if (dis < diameter / pathScale && (fabs(x) > vehicleLength / pathScale / 2.0 || fabs(y) > vehicleWidth / pathScale / 2.0) &&
               (h > obstacleHeightThre || !useTerrainAnalysis) && checkRotObstacle) {
             float angObs = atan2(y, x) * 180.0 / PI;
             if (angObs > 0) {
@@ -819,7 +831,7 @@ int main(int argc, char** argv)
           float rotAng = (10.0 * rotDir - 180.0) * PI / 180;
           float rotDeg = 10.0 * rotDir;
           if (rotDeg > 180.0) rotDeg -= 360.0;
-          if (maxScore < clearPathPerGroupScore[i] && ((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) || 
+          if (maxScore < clearPathPerGroupScore[i] && ((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) ||
               (rotDeg > minObsAngCW && rotDeg < minObsAngCCW && twoWayDrive) || !checkRotObstacle)) {
             maxScore = clearPathPerGroupScore[i];
             selectedGroupID = i;
@@ -865,8 +877,8 @@ int main(int argc, char** argv)
               angDiff = 360.0 - angDiff;
             }
             if ((angDiff > dirThre && !dirToVehicle) || (fabs(10.0 * rotDir - 180.0) > dirThre && fabs(joyDir) <= 90.0 && dirToVehicle) ||
-                ((10.0 * rotDir > dirThre && 360.0 - 10.0 * rotDir > dirThre) && fabs(joyDir) > 90.0 && dirToVehicle) || 
-                !((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) || 
+                ((10.0 * rotDir > dirThre && 360.0 - 10.0 * rotDir > dirThre) && fabs(joyDir) > 90.0 && dirToVehicle) ||
+                !((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) ||
                 (rotDeg > minObsAngCW && rotDeg < minObsAngCCW && twoWayDrive) || !checkRotObstacle)) {
               continue;
             }

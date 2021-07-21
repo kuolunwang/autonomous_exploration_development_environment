@@ -12,7 +12,7 @@
 #include <std_msgs/Float32.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Joy.h>
@@ -91,6 +91,8 @@ bool pathInit = false;
 bool navFwd = true;
 double switchTime = 0;
 
+bool joy_control_auto = false;
+
 nav_msgs::Path path;
 
 void odomHandler(const nav_msgs::Odometry::ConstPtr& odomIn)
@@ -141,23 +143,30 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
 void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
 {
   joyTime = ros::Time::now().toSec();
+  //
+  // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
+  // joySpeed = joySpeedRaw;
+  // if (joySpeed > 1.0) joySpeed = 1.0;
+  // if (joy->axes[4] == 0) joySpeed = 0;
+  // joyYaw = joy->axes[3];
+  // if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
+  //
+  // if (joy->axes[4] < 0 && !twoWayDrive) {
+  //   joySpeed = 0;
+  //   joyYaw = 0;
+  // }
 
-  joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
-  joySpeed = joySpeedRaw;
-  if (joySpeed > 1.0) joySpeed = 1.0;
-  if (joy->axes[4] == 0) joySpeed = 0;
-  joyYaw = joy->axes[3];
-  if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
-
-  if (joy->axes[4] < 0 && !twoWayDrive) {
-    joySpeed = 0;
-    joyYaw = 0;
+  if (joy->buttons[7] == 1) {
+    if (joy_control_auto == false){
+      joy_control_auto = true;
+      cout<<"go auto"<<endl;
+    }
   }
-
-  if (joy->axes[2] > -0.1) {
-    autonomyMode = false;
-  } else {
-    autonomyMode = true;
+  if (joy->buttons[6] == 1) {
+    if (joy_control_auto == true){
+      joy_control_auto = false;
+      cout<<"go manual"<<endl;
+    }
   }
 }
 
@@ -223,9 +232,9 @@ int main(int argc, char** argv)
 
   ros::Subscriber subStop = nh.subscribe<std_msgs::Int8> ("/stop", 5, stopHandler);
 
-  ros::Publisher pubSpeed = nh.advertise<geometry_msgs::TwistStamped> ("/cmd_vel", 5);
-  geometry_msgs::TwistStamped cmd_vel;
-  cmd_vel.header.frame_id = "vehicle";
+  ros::Publisher pubSpeed = nh.advertise<geometry_msgs::Twist> ("/X1/x1_velocity_controller/cmd_vel", 5);
+  geometry_msgs::Twist cmd_vel;
+  // cmd_vel.header.frame_id = "vehicle";
 
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;
@@ -240,9 +249,9 @@ int main(int argc, char** argv)
     ros::spinOnce();
 
     if (pathInit) {
-      float vehicleXRel = cos(vehicleYawRec) * (vehicleX - vehicleXRec) 
+      float vehicleXRel = cos(vehicleYawRec) * (vehicleX - vehicleXRec)
                         + sin(vehicleYawRec) * (vehicleY - vehicleYRec);
-      float vehicleYRel = -sin(vehicleYawRec) * (vehicleX - vehicleXRec) 
+      float vehicleYRel = -sin(vehicleYawRec) * (vehicleX - vehicleXRec)
                         + cos(vehicleYawRec) * (vehicleY - vehicleYRec);
 
       int pathSize = path.poses.size();
@@ -331,11 +340,14 @@ int main(int argc, char** argv)
 
       pubSkipCount--;
       if (pubSkipCount < 0) {
-        cmd_vel.header.stamp = ros::Time().fromSec(odomTime);
-        if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.twist.linear.x = 0;
-        else cmd_vel.twist.linear.x = vehicleSpeed;
-        cmd_vel.twist.angular.z = vehicleYawRate;
-        pubSpeed.publish(cmd_vel);
+        // cmd_vel.header.stamp = ros::Time().fromSec(odomTime);
+        if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.linear.x = 0;
+        else cmd_vel.linear.x = vehicleSpeed;
+        cmd_vel.angular.z = vehicleYawRate;
+
+        if (joy_control_auto == true){
+          pubSpeed.publish(cmd_vel);
+        }
 
         pubSkipCount = pubSkipNum;
       }
