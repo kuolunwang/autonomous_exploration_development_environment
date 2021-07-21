@@ -77,18 +77,18 @@ void laserCloudAndOdometryHandler(const nav_msgs::Odometry::ConstPtr& odometry,
 
   odometryIn.header.stamp = laserCloud2->header.stamp;
   odometryIn.header.frame_id = "map";
-  odometryIn.child_frame_id = "sensor_at_scan";
+  odometryIn.child_frame_id = "velodyne1";
   pubOdometryPointer->publish(odometryIn);
 
   transformToMap.stamp_ = laserCloud2->header.stamp;
   transformToMap.frame_id_ = "map";
-  transformToMap.child_frame_id_ = "sensor_at_scan";
+  transformToMap.child_frame_id_ = "velodyne1";
   tfBroadcasterPointer->sendTransform(transformToMap);
 
   sensor_msgs::PointCloud2 scan_data;
   pcl::toROSMsg(*laserCLoudInSensorFrame, scan_data);
   scan_data.header.stamp = laserCloud2->header.stamp;
-  scan_data.header.frame_id = "sensor_at_scan";
+  scan_data.header.frame_id = "velodyne1";
   pubLaserCloud.publish(scan_data);
 }
 

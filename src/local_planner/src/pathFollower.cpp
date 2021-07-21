@@ -233,15 +233,15 @@ int main(int argc, char** argv)
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
 
-  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
+  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("joy_teleop/joy", 5, joystickHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
 
   ros::Subscriber subStop = nh.subscribe<std_msgs::Int8> ("/stop", 5, stopHandler);
 
-  ros::Publisher pubSpeed = nh.advertise<geometry_msgs::Twist> ("/X1/x1_velocity_controller/cmd_vel", 5);
+  ros::Publisher pubSpeed = nh.advertise<geometry_msgs::Twist> ("husky_velocity_controller/cmd_vel", 5);
   geometry_msgs::Twist cmd_vel;
-  // cmd_vel.header.frame_id = "vehicle";
+  // cmd_vel.header.frame_id = "base_link";
 
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;

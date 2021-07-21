@@ -64,13 +64,13 @@ void odometryHandler(const nav_msgs::Odometry::ConstPtr& odom)
 
   // publish odometry messages
   odomData.header.frame_id = "map";
-  odomData.child_frame_id = "sensor";
+  odomData.child_frame_id = "velodyne1";
   pubOdometryPointer->publish(odomData);
 
   // publish tf messages
   odomTrans.stamp_ = odom->header.stamp;
   odomTrans.frame_id_ = "map";
-  odomTrans.child_frame_id_ = "sensor";
+  odomTrans.child_frame_id_ = "velodyne1";
   odomTrans.setRotation(tf::Quaternion(geoQuat.x, geoQuat.y, geoQuat.z, geoQuat.w));
   odomTrans.setOrigin(tf::Vector3(odomData.pose.pose.position.x, odomData.pose.pose.position.y, odomData.pose.pose.position.z));
 

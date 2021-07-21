@@ -8,26 +8,33 @@
   <arg name="linear_scale" default="0.3"/>
   <arg name="angular_scale" default="0.6"/>
 
-  <include file="$(find ps3joy)/launch/ps3.launch" />
+  <arg name="map_frame_scan" default="/map_part"/>
+  <arg name="odometry" default="/slam_odometry"/>
 
-  <include file="$(find local_planner)/launch/local_planner.launch" >
-    <arg name="cameraOffsetZ" value="$(arg cameraOffsetZ)"/>
-    <arg name="goalX" value="$(arg vehicleX)"/>
+  <group ns="$(arg veh)">
+    <!-- <include file="$(find ps3joy)/launch/ps3.launch" /> -->
 
-    <arg name="linear_scale" value="$(arg linear_scale)"/>
-  	<arg name="angular_scale" value="$(arg angular_scale)"/>
-  </include>
+    <include file="$(find local_planner)/launch/local_planner.launch" >
+      <arg name="cameraOffsetZ" value="$(arg cameraOffsetZ)"/>
+      <arg name="goalX" value="$(arg vehicleX)"/>
 
-  <include file="$(find terrain_analysis)/launch/terrain_analysis.launch" />
+      <arg name="linear_scale" value="$(arg linear_scale)"/>
+      <arg name="angular_scale" value="$(arg angular_scale)"/>
+    </include>
 
-  <include file="$(find terrain_analysis_ext)/launch/terrain_analysis_ext.launch" >
-    <arg name="checkTerrainConn" value="$(arg checkTerrainConn)"/>
-  </include>
+    <include file="$(find terrain_analysis)/launch/terrain_analysis.launch" />
 
-  <include file="$(find sensor_scan_generation)/launch/sensor_scan_generation.launch" />
+    <include file="$(find terrain_analysis_ext)/launch/terrain_analysis_ext.launch" >
+      <arg name="checkTerrainConn" value="$(arg checkTerrainConn)"/>
+    </include>
 
-  <include file="$(find loam_interface)/launch/loam_interface.launch" />
+    <include file="$(find sensor_scan_generation)/launch/sensor_scan_generation.launch" />
 
-  <!-- <node launch-prefix="nice" pkg="rviz" type="rviz" name="rvizGA" args="-d $(find vehicle_simulator)/rviz/vehicle_simulator.rviz" respawn="true"/> -->
+    <include file="$(find loam_interface)/launch/loam_interface.launch" >
+      <arg name="map_frame_scan" value="$(arg map_frame_scan)"/>
+      <arg name="odometry" value="$(arg odometry)"/>
+    </include>
 
+    <!-- <node launch-prefix="nice" pkg="rviz" type="rviz" name="rvizGA" args="-d $(find vehicle_simulator)/rviz/vehicle_simulator.rviz" respawn="true"/> -->
+  </group>
 </launch>
