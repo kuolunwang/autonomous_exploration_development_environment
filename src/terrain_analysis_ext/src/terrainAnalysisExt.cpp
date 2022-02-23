@@ -438,7 +438,7 @@ int main(int argc, char** argv)
           }
         }
       }
-  
+
       // check terrain connectivity to remove ceiling
       if (checkTerrainConn)
       {
@@ -477,7 +477,7 @@ int main(int argc, char** argv)
               }
             }
           }
-        } 
+        }
       }
 
       // compute terrain map beyond localTerrainMapRadius

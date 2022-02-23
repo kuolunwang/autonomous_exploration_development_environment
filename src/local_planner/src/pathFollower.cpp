@@ -30,6 +30,8 @@ using namespace std;
 
 const double PI = 3.1415926;
 
+string cmd_velTopic = "/robot/husky_velocity_controller/cmd_vel";
+
 double sensorOffsetX = 0;
 double sensorOffsetY = 0;
 int pubSkipNum = 1;
@@ -91,11 +93,6 @@ bool pathInit = false;
 bool navFwd = true;
 double switchTime = 0;
 
-bool joy_control_auto = false;
-
-double linear_scale = 1.0;
-double angular_scale = 1.0;
-
 nav_msgs::Path path;
 
 void odomHandler(const nav_msgs::Odometry::ConstPtr& odomIn)
@@ -146,30 +143,23 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
 void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
 {
   joyTime = ros::Time::now().toSec();
-  //
-  // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
-  // joySpeed = joySpeedRaw;
-  // if (joySpeed > 1.0) joySpeed = 1.0;
-  // if (joy->axes[4] == 0) joySpeed = 0;
-  // joyYaw = joy->axes[3];
-  // if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
-  //
-  // if (joy->axes[4] < 0 && !twoWayDrive) {
-  //   joySpeed = 0;
-  //   joyYaw = 0;
-  // }
 
-  if (joy->buttons[7] == 1) {
-    if (joy_control_auto == false){
-      joy_control_auto = true;
-      cout<<"go auto"<<endl;
-    }
+  joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
+  joySpeed = joySpeedRaw;
+  if (joySpeed > 1.0) joySpeed = 1.0;
+  if (joy->axes[4] == 0) joySpeed = 0;
+  joyYaw = joy->axes[3];
+  if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
+
+  if (joy->axes[4] < 0 && !twoWayDrive) {
+    joySpeed = 0;
+    joyYaw = 0;
   }
-  if (joy->buttons[6] == 1) {
-    if (joy_control_auto == true){
-      joy_control_auto = false;
-      cout<<"go manual"<<endl;
-    }
+
+  if (joy->axes[2] > -0.1) {
+    autonomyMode = false;
+  } else {
+    autonomyMode = true;
   }
 }
 
@@ -195,6 +185,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "pathFollower");
   ros::NodeHandle nh;
   ros::NodeHandle nhPrivate = ros::NodeHandle("~");
+
+  nhPrivate.getParam("cmd_velTopic", cmd_velTopic);
 
   nhPrivate.getParam("sensorOffsetX", sensorOffsetX);
   nhPrivate.getParam("sensorOffsetY", sensorOffsetY);
@@ -225,23 +217,19 @@ int main(int argc, char** argv)
   nhPrivate.getParam("autonomySpeed", autonomySpeed);
   nhPrivate.getParam("joyToSpeedDelay", joyToSpeedDelay);
 
-  nhPrivate.getParam("linear_scale", linear_scale);
-  nhPrivate.getParam("angular_scale", angular_scale);
-  cout << "linear_scale:" << linear_scale << " angular_scale:" << angular_scale << endl;
-
   ros::Subscriber subOdom = nh.subscribe<nav_msgs::Odometry> ("/state_estimation", 5, odomHandler);
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
 
-  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("joy_teleop/joy", 5, joystickHandler);
+  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
 
   ros::Subscriber subStop = nh.subscribe<std_msgs::Int8> ("/stop", 5, stopHandler);
 
-  ros::Publisher pubSpeed = nh.advertise<geometry_msgs::Twist> ("husky_velocity_controller/cmd_vel", 5);
+  ros::Publisher pubSpeed = nh.advertise<geometry_msgs::Twist> (cmd_velTopic, 5);
   geometry_msgs::Twist cmd_vel;
-  // cmd_vel.header.frame_id = "base_link";
+  // cmd_vel.header.frame_id = "/base_link";
 
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;
@@ -349,12 +337,9 @@ int main(int argc, char** argv)
       if (pubSkipCount < 0) {
         // cmd_vel.header.stamp = ros::Time().fromSec(odomTime);
         if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.linear.x = 0;
-        else cmd_vel.linear.x = vehicleSpeed * linear_scale ;
-        cmd_vel.angular.z = vehicleYawRate * angular_scale ;
-
-        if (joy_control_auto == true){
-          pubSpeed.publish(cmd_vel);
-        }
+        else cmd_vel.linear.x = vehicleSpeed;
+        cmd_vel.angular.z = vehicleYawRate;
+        pubSpeed.publish(cmd_vel);
 
         pubSkipCount = pubSkipNum;
       }

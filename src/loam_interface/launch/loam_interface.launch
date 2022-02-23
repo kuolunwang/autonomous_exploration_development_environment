@@ -1,10 +1,10 @@
 <launch>
-  <arg name="map_frame_scan" default="/map_part"/>
-  <arg name="odometry" default="/slam_odometry"/>
+  <arg name="posestamp_topic" default="/truth_map_posestamped" />
+  <arg name="point_topic" default="/map_part" />
 
   <node pkg="loam_interface" type="loamInterface" name="loamInterface" output="screen" required="true">
-    <param name="stateEstimationTopic" type="string" value="$(arg odometry)" />
-    <param name="registeredScanTopic" type="string" value="$(arg map_frame_scan)" />
+    <param name="stateEstimationTopic" type="string" value="$(arg posestamp_topic)" />
+    <param name="registeredScanTopic" type="string" value="$(arg point_topic)" />
     <param name="flipStateEstimation" type="bool" value="false" />
     <param name="flipRegisteredScan" type="bool" value="false" />
     <param name="sendTF" type="bool" value="false" />
