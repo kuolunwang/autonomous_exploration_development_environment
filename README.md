@@ -1,6 +1,6 @@
 # How to run this repo with our robot (Husky) in gazebo
 
-`roslaunch vehicle_simulator husky_tare.launch cmd_velTopic:=/robot/husky_velocity_controller/cmd_vel`
+`roslaunch vehicle_simulator husky_tare.launch cmd_velTopic:=/robot/husky_velocity_controller/cmd_vel posestamp_topic:=/slam_pose point_topic:=/map_part`
 
 * input topic
     * /map_part (sensor_msgs/PointCloud2)
