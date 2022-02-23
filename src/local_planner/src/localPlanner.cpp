@@ -206,46 +206,34 @@ void terrainCloudHandler(const sensor_msgs::PointCloud2ConstPtr& terrainCloud2)
   }
 }
 
-// void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
-// {
-  // joyTime = ros::Time::now().toSec();
+void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
+{
+  joyTime = ros::Time::now().toSec();
 
-  // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
-  // joySpeed = joySpeedRaw;
-  // if (joySpeed > 1.0) joySpeed = 1.0;
-  // if (joy->axes[4] == 0) joySpeed = 0;
-  //
-  // if (joySpeed > 0) {
-  //   joyDir = atan2(joy->axes[3], joy->axes[4]) * 180 / PI;
-  //   if (joy->axes[4] < 0) joyDir *= -1;
-  // }
-  //
-  // if (joy->axes[4] < 0 && !twoWayDrive) joySpeed = 0;
+  joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
+  joySpeed = joySpeedRaw;
+  if (joySpeed > 1.0) joySpeed = 1.0;
+  if (joy->axes[4] == 0) joySpeed = 0;
 
-  // if (joy->axes[2] > -0.1) {
-  //   autonomyMode = false;
-  // } else {
-  //   autonomyMode = true;
-  // }
-  // if (joy->buttons[7] == 1) {
-  //   if (autonomyMode == false){
-  //     autonomyMode = true;
-  //     cout<<"go auto"<<endl;
-  //   }
-  // }
-  // if (joy->buttons[6] == 1) {
-  //   if (autonomyMode == true){
-  //     autonomyMode = false;
-  //     cout<<"go manual"<<endl;
-  //   }
-  // }
+  if (joySpeed > 0) {
+    joyDir = atan2(joy->axes[3], joy->axes[4]) * 180 / PI;
+    if (joy->axes[4] < 0) joyDir *= -1;
+  }
 
-  // if (joy->axes[5] > -0.1) {
-  //   checkObstacle = true;
-  // } else {
-  //   checkObstacle = false;
-  // }
-// }
+  if (joy->axes[4] < 0 && !twoWayDrive) joySpeed = 0;
+
+  if (joy->axes[2] > -0.1) {
+    autonomyMode = false;
+  } else {
+    autonomyMode = true;
+  }
+
+  if (joy->axes[5] > -0.1) {
+    checkObstacle = true;
+  } else {
+    checkObstacle = false;
+  }
+}
 
 void goalHandler(const geometry_msgs::PoseStamped::ConstPtr& goal)
 {
@@ -557,7 +545,7 @@ int main(int argc, char** argv)
   ros::Subscriber subTerrainCloud = nh.subscribe<sensor_msgs::PointCloud2>
                                     ("/terrain_map", 5, terrainCloudHandler);
 
-  // ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
+  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
 
   ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PoseStamped> ("/move_base_simple/goal", 5, goalHandler);
 
@@ -950,7 +938,7 @@ int main(int argc, char** argv)
       /*sensor_msgs::PointCloud2 plannerCloud2;
       pcl::toROSMsg(*plannerCloudCrop, plannerCloud2);
       plannerCloud2.header.stamp = ros::Time().fromSec(odomTime);
-      plannerCloud2.header.frame_id = "base_link";
+      plannerCloud2.header.frame_id = "/base_link";
       pubLaserCloud.publish(plannerCloud2);*/
     }
 
