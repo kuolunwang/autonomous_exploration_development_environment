@@ -50,9 +50,10 @@ link_directories(
 
 ## Declare executables
 add_executable(loamInterface src/loamInterface.cpp)
-
+add_executable(icp src/icp.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(loamInterface ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(icp ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 install(TARGETS loamInterface
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

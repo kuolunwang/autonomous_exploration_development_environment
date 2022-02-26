@@ -93,6 +93,7 @@ bool pathInit = false;
 bool navFwd = true;
 double switchTime = 0;
 
+bool flag = 0;
 nav_msgs::Path path;
 
 void odomHandler(const nav_msgs::Odometry::ConstPtr& odomIn)
@@ -142,25 +143,33 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
 
 void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
 {
-  joyTime = ros::Time::now().toSec();
-
-  joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
-  joySpeed = joySpeedRaw;
-  if (joySpeed > 1.0) joySpeed = 1.0;
-  if (joy->axes[4] == 0) joySpeed = 0;
-  joyYaw = joy->axes[3];
-  if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
-
-  if (joy->axes[4] < 0 && !twoWayDrive) {
-    joySpeed = 0;
-    joyYaw = 0;
+  if(joy->buttons[6]==1){
+    cout<<"switch to manual"<<endl;
+    flag = 0;
   }
-
-  if (joy->axes[2] > -0.1) {
-    autonomyMode = false;
-  } else {
-    autonomyMode = true;
+  if(joy->buttons[7]==1){
+    cout<<"switch to auto"<<endl;
+    flag = 1;
   }
+  // joyTime = ros::Time::now().toSec();
+  //
+  // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
+  // joySpeed = joySpeedRaw;
+  // if (joySpeed > 1.0) joySpeed = 1.0;
+  // if (joy->axes[4] == 0) joySpeed = 0;
+  // joyYaw = joy->axes[3];
+  // if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
+  //
+  // if (joy->axes[4] < 0 && !twoWayDrive) {
+  //   joySpeed = 0;
+  //   joyYaw = 0;
+  // }
+  //
+  // if (joy->axes[2] > -0.1) {
+  //   autonomyMode = false;
+  // } else {
+  //   autonomyMode = true;
+  // }
 }
 
 void speedHandler(const std_msgs::Float32::ConstPtr& speed)
@@ -221,7 +230,7 @@ int main(int argc, char** argv)
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
 
-  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
+  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot/joy_teleop/joy", 5, joystickHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
 
@@ -339,7 +348,7 @@ int main(int argc, char** argv)
         if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.linear.x = 0;
         else cmd_vel.linear.x = vehicleSpeed;
         cmd_vel.angular.z = vehicleYawRate;
-        pubSpeed.publish(cmd_vel);
+        if(flag) pubSpeed.publish(cmd_vel);
 
         pubSkipCount = pubSkipNum;
       }
