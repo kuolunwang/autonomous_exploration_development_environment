@@ -1,6 +1,6 @@
 <launch>
   <arg name="posestamp_topic" default="/truth_map_posestamped" />
-  <arg name="point_topic" default="/robot/map_all" />
+  <arg name="point_topic" default="/robot/map_part" />
   <arg name="cmd_velTopic" default="/robot/husky_velocity_controller/cmd_vel"/>
 
   <arg name="cameraOffsetZ" default="0"/>

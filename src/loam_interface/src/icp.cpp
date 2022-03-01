@@ -67,7 +67,7 @@ MapFilter::MapFilter(NodeHandle &nh)
     passX.setFilterFieldName("x");
     passY.setFilterFieldName("y");
     passZ.setFilterFieldName("z");
-    passZ.setFilterLimits(0.1,1.0);
+    passZ.setFilterLimits(0.3,0.8);
     voxel.setLeafSize(leaf_size, leaf_size, leaf_size);
     icp.setMaxCorrespondenceDistance(1);
     icp.setTransformationEpsilon(1e-12);
@@ -101,7 +101,7 @@ void MapFilter::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
 {
     fromROSMsg(msg, *pc);
-    passZ.filter(*map);
+
     try
     {
         ros::Duration five_seconds(5);
@@ -126,6 +126,7 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     }
 
     if(flag) *map += *pc;
+    passZ.filter(*map);
 
 
     voxel.setInputCloud(map);
