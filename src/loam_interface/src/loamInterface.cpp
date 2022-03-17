@@ -42,11 +42,11 @@ ros::Publisher *pubOdometryPointer = NULL;
 tf::TransformBroadcaster *tfBroadcasterPointer = NULL;
 ros::Publisher *pubLaserCloudPointer = NULL;
 
-void odometryHandler(const nav_msgs::Odometry::ConstPtr& odom)
+void odometryHandler(const geometry_msgs::PoseStamped::ConstPtr& odom)
 {
   double roll, pitch, yaw;
-  geometry_msgs::Quaternion geoQuat = odom->pose.pose.orientation;
-  odomData = *odom;
+  geometry_msgs::Quaternion geoQuat = odom->pose.orientation;
+  odomData.pose.pose = (*odom).pose;
 
   if (flipStateEstimation) {
     tf::Matrix3x3(tf::Quaternion(geoQuat.z, -geoQuat.x, -geoQuat.y, geoQuat.w)).getRPY(roll, pitch, yaw);
@@ -57,20 +57,20 @@ void odometryHandler(const nav_msgs::Odometry::ConstPtr& odom)
     geoQuat = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
 
     odomData.pose.pose.orientation = geoQuat;
-    odomData.pose.pose.position.x = odom->pose.pose.position.z;
-    odomData.pose.pose.position.y = odom->pose.pose.position.x;
-    odomData.pose.pose.position.z = odom->pose.pose.position.y;
+    odomData.pose.pose.position.x = odom->pose.position.z;
+    odomData.pose.pose.position.y = odom->pose.position.x;
+    odomData.pose.pose.position.z = odom->pose.position.y;
   }
 
   // publish odometry messages
   odomData.header.frame_id = "map";
-  odomData.child_frame_id = "sensor";
+  odomData.child_frame_id = "front_laser";
   pubOdometryPointer->publish(odomData);
 
   // publish tf messages
   odomTrans.stamp_ = odom->header.stamp;
   odomTrans.frame_id_ = "map";
-  odomTrans.child_frame_id_ = "sensor";
+  odomTrans.child_frame_id_ = "front_laser";
   odomTrans.setRotation(tf::Quaternion(geoQuat.x, geoQuat.y, geoQuat.z, geoQuat.w));
   odomTrans.setOrigin(tf::Vector3(odomData.pose.pose.position.x, odomData.pose.pose.position.y, odomData.pose.pose.position.z));
 
@@ -78,7 +78,7 @@ void odometryHandler(const nav_msgs::Odometry::ConstPtr& odom)
     if (!reverseTF) {
       tfBroadcasterPointer->sendTransform(odomTrans);
     } else {
-      tfBroadcasterPointer->sendTransform(tf::StampedTransform(odomTrans.inverse(), odom->header.stamp, "sensor", "map"));
+      tfBroadcasterPointer->sendTransform(tf::StampedTransform(odomTrans.inverse(), odom->header.stamp, "/front_laser", "/map"));
     }
   }
 }
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
   nhPrivate.getParam("sendTF", sendTF);
   nhPrivate.getParam("reverseTF", reverseTF);
 
-  ros::Subscriber subOdometry = nh.subscribe<nav_msgs::Odometry> (stateEstimationTopic, 5, odometryHandler);
+  ros::Subscriber subOdometry = nh.subscribe<geometry_msgs::PoseStamped> (stateEstimationTopic, 5, odometryHandler);
 
   ros::Subscriber subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2> (registeredScanTopic, 5, laserCloudHandler);
 

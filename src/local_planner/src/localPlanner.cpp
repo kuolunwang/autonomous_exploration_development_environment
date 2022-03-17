@@ -12,7 +12,7 @@
 #include <std_msgs/Float32.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -235,10 +235,10 @@ void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
   }
 }
 
-void goalHandler(const geometry_msgs::PointStamped::ConstPtr& goal)
+void goalHandler(const geometry_msgs::PoseStamped::ConstPtr& goal)
 {
-  goalX = goal->point.x;
-  goalY = goal->point.y;
+  goalX = goal->pose.position.x;
+  goalY = goal->pose.position.y;
 }
 
 void speedHandler(const std_msgs::Float32::ConstPtr& speed)
@@ -547,7 +547,7 @@ int main(int argc, char** argv)
 
   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
 
-  ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PointStamped> ("/way_point", 5, goalHandler);
+  ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PoseStamped> ("/move_base_simple/goal", 5, goalHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
 
@@ -656,9 +656,9 @@ int main(int argc, char** argv)
 
       int boundaryCloudSize = boundaryCloud->points.size();
       for (int i = 0; i < boundaryCloudSize; i++) {
-        point.x = ((boundaryCloud->points[i].x - vehicleX) * cosVehicleYaw 
+        point.x = ((boundaryCloud->points[i].x - vehicleX) * cosVehicleYaw
                 + (boundaryCloud->points[i].y - vehicleY) * sinVehicleYaw);
-        point.y = (-(boundaryCloud->points[i].x - vehicleX) * sinVehicleYaw 
+        point.y = (-(boundaryCloud->points[i].x - vehicleX) * sinVehicleYaw
                 + (boundaryCloud->points[i].y - vehicleY) * cosVehicleYaw);
         point.z = boundaryCloud->points[i].z;
         point.intensity = boundaryCloud->points[i].intensity;
@@ -671,9 +671,9 @@ int main(int argc, char** argv)
 
       int addedObstaclesSize = addedObstacles->points.size();
       for (int i = 0; i < addedObstaclesSize; i++) {
-        point.x = ((addedObstacles->points[i].x - vehicleX) * cosVehicleYaw 
+        point.x = ((addedObstacles->points[i].x - vehicleX) * cosVehicleYaw
                 + (addedObstacles->points[i].y - vehicleY) * sinVehicleYaw);
-        point.y = (-(addedObstacles->points[i].x - vehicleX) * sinVehicleYaw 
+        point.y = (-(addedObstacles->points[i].x - vehicleX) * sinVehicleYaw
                 + (addedObstacles->points[i].y - vehicleY) * cosVehicleYaw);
         point.z = addedObstacles->points[i].z;
         point.intensity = addedObstacles->points[i].intensity;
@@ -742,7 +742,7 @@ int main(int argc, char** argv)
               float x2 = cos(rotAng) * x + sin(rotAng) * y;
               float y2 = -sin(rotAng) * x + cos(rotAng) * y;
 
-              float scaleY = x2 / gridVoxelOffsetX + searchRadius / gridVoxelOffsetY 
+              float scaleY = x2 / gridVoxelOffsetX + searchRadius / gridVoxelOffsetY
                              * (gridVoxelOffsetX - x2) / gridVoxelOffsetX;
 
               int indX = int((gridVoxelOffsetX + gridVoxelSize / 2 - x2) / gridVoxelSize);
@@ -763,7 +763,7 @@ int main(int argc, char** argv)
             }
           }
 
-          if (dis < diameter / pathScale && (fabs(x) > vehicleLength / pathScale / 2.0 || fabs(y) > vehicleWidth / pathScale / 2.0) && 
+          if (dis < diameter / pathScale && (fabs(x) > vehicleLength / pathScale / 2.0 || fabs(y) > vehicleWidth / pathScale / 2.0) &&
               (h > obstacleHeightThre || !useTerrainAnalysis) && checkRotObstacle) {
             float angObs = atan2(y, x) * 180.0 / PI;
             if (angObs > 0) {
@@ -819,7 +819,7 @@ int main(int argc, char** argv)
           float rotAng = (10.0 * rotDir - 180.0) * PI / 180;
           float rotDeg = 10.0 * rotDir;
           if (rotDeg > 180.0) rotDeg -= 360.0;
-          if (maxScore < clearPathPerGroupScore[i] && ((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) || 
+          if (maxScore < clearPathPerGroupScore[i] && ((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) ||
               (rotDeg > minObsAngCW && rotDeg < minObsAngCCW && twoWayDrive) || !checkRotObstacle)) {
             maxScore = clearPathPerGroupScore[i];
             selectedGroupID = i;
@@ -850,7 +850,7 @@ int main(int argc, char** argv)
           }
 
           path.header.stamp = ros::Time().fromSec(odomTime);
-          path.header.frame_id = "vehicle";
+          path.header.frame_id = "base_link";
           pubPath.publish(path);
 
           #if PLOTPATHSET == 1
@@ -865,8 +865,8 @@ int main(int argc, char** argv)
               angDiff = 360.0 - angDiff;
             }
             if ((angDiff > dirThre && !dirToVehicle) || (fabs(10.0 * rotDir - 180.0) > dirThre && fabs(joyDir) <= 90.0 && dirToVehicle) ||
-                ((10.0 * rotDir > dirThre && 360.0 - 10.0 * rotDir > dirThre) && fabs(joyDir) > 90.0 && dirToVehicle) || 
-                !((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) || 
+                ((10.0 * rotDir > dirThre && 360.0 - 10.0 * rotDir > dirThre) && fabs(joyDir) > 90.0 && dirToVehicle) ||
+                !((rotAng * 180.0 / PI > minObsAngCW && rotAng * 180.0 / PI < minObsAngCCW) ||
                 (rotDeg > minObsAngCW && rotDeg < minObsAngCCW && twoWayDrive) || !checkRotObstacle)) {
               continue;
             }
@@ -896,7 +896,7 @@ int main(int argc, char** argv)
           sensor_msgs::PointCloud2 freePaths2;
           pcl::toROSMsg(*freePaths, freePaths2);
           freePaths2.header.stamp = ros::Time().fromSec(odomTime);
-          freePaths2.header.frame_id = "vehicle";
+          freePaths2.header.frame_id = "base_link";
           pubFreePaths.publish(freePaths2);
           #endif
         }
@@ -922,7 +922,7 @@ int main(int argc, char** argv)
         path.poses[0].pose.position.z = 0;
 
         path.header.stamp = ros::Time().fromSec(odomTime);
-        path.header.frame_id = "vehicle";
+        path.header.frame_id = "base_link";
         pubPath.publish(path);
 
         #if PLOTPATHSET == 1
@@ -930,7 +930,7 @@ int main(int argc, char** argv)
         sensor_msgs::PointCloud2 freePaths2;
         pcl::toROSMsg(*freePaths, freePaths2);
         freePaths2.header.stamp = ros::Time().fromSec(odomTime);
-        freePaths2.header.frame_id = "vehicle";
+        freePaths2.header.frame_id = "base_link";
         pubFreePaths.publish(freePaths2);
         #endif
       }
@@ -938,7 +938,7 @@ int main(int argc, char** argv)
       /*sensor_msgs::PointCloud2 plannerCloud2;
       pcl::toROSMsg(*plannerCloudCrop, plannerCloud2);
       plannerCloud2.header.stamp = ros::Time().fromSec(odomTime);
-      plannerCloud2.header.frame_id = "vehicle";
+      plannerCloud2.header.frame_id = "/base_link";
       pubLaserCloud.publish(plannerCloud2);*/
     }
 

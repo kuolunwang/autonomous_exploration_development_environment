@@ -1,11 +1,15 @@
 <launch>
+  <arg name="posestamp_topic" default="/truth_map_posestamped" />
+  <arg name="point_topic" default="/map_all" />
 
+
+  <node pkg="loam_interface" type="icp" name="icp" output="screen" required="true" />
   <node pkg="loam_interface" type="loamInterface" name="loamInterface" output="screen" required="true">
-    <param name="stateEstimationTopic" type="string" value="/integrated_to_init" />
-    <param name="registeredScanTopic" type="string" value="/velodyne_cloud_registered" />
-    <param name="flipStateEstimation" type="bool" value="true" />
-    <param name="flipRegisteredScan" type="bool" value="true" />
-    <param name="sendTF" type="bool" value="true" />
+    <param name="stateEstimationTopic" type="string" value="$(arg posestamp_topic)" />
+    <param name="registeredScanTopic" type="string" value="$(arg point_topic)" />
+    <param name="flipStateEstimation" type="bool" value="false" />
+    <param name="flipRegisteredScan" type="bool" value="false" />
+    <param name="sendTF" type="bool" value="false" />
     <param name="reverseTF" type="bool" value="false" />
   </node>
 
