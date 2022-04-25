@@ -1,5 +1,7 @@
 <launch>
-
-  <node pkg="sensor_scan_generation" type="sensorScanGeneration" name="sensorScanGeneration" output="screen" required="true"/>
+  <arg name="frame_sensor" default="/X1/sensor_at_scan"/>
+  <node pkg="sensor_scan_generation" type="sensorScanGeneration" name="sensorScanGeneration" output="screen" required="true">
+    <param name="frame_sensor" type="string" value="$(arg frame_sensor)" />
+  </node>
 
 </launch>

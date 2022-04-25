@@ -39,6 +39,7 @@ private:
     float z_range = 20;
     float leaf_size = 0.4;
     bool flag = 0;
+    string frame_laser;
     sensor_msgs::PointCloud2 ros_map, ros_point;
     PointCloud<PointXYZ>::Ptr pc;
     PointCloud<PointXYZ>::Ptr map;
@@ -59,6 +60,7 @@ MapFilter::MapFilter(NodeHandle &nh)
     param::get("~y_range", y_range);
     param::get("~z_range", z_range);
     param::get("~voxel_size", leaf_size);
+    param::get("~frame_laser", frame_laser);
 
     ros_map.header.frame_id = "map";
     ros_point.header.frame_id = "map";
@@ -75,10 +77,10 @@ MapFilter::MapFilter(NodeHandle &nh)
     icp.setMaximumIterations(100);
 
 
-    pub_map = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_all", 1);
-    pub_point = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_part", 1);
-    sub_map = nh.subscribe("/robot/lidar_crop", 1, &MapFilter::pc_cb, this);
-    joy_sub_ = nh.subscribe("/robot/joy_teleop/joy", 10, &MapFilter::joyCallback, this);
+    pub_map = nh.advertise<sensor_msgs::PointCloud2>("map_all", 1);
+    pub_point = nh.advertise<sensor_msgs::PointCloud2>("map_part", 1);
+    sub_map = nh.subscribe("lidar_crop", 1, &MapFilter::pc_cb, this);
+    joy_sub_ = nh.subscribe("joy_teleop/joy", 10, &MapFilter::joyCallback, this);
     ROS_INFO("map filter initialized");
 }
 
@@ -105,8 +107,8 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     try
     {
         ros::Duration five_seconds(5);
-        listener.waitForTransform("map", "front_laser", ros::Time(0), five_seconds);
-        listener.lookupTransform("map", "front_laser", ros::Time(0), tf_pose);
+        listener.waitForTransform("map", frame_laser, ros::Time(0), five_seconds);
+        listener.lookupTransform("map", frame_laser, ros::Time(0), tf_pose);
     }
     catch (tf::TransformException ex)
     {

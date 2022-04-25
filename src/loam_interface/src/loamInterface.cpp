@@ -29,6 +29,7 @@ const double PI = 3.1415926;
 
 string stateEstimationTopic = "/integrated_to_init";
 string registeredScanTopic = "/velodyne_cloud_registered";
+string frame_laser;
 bool flipStateEstimation = true;
 bool flipRegisteredScan = true;
 bool sendTF = true;
@@ -64,13 +65,13 @@ void odometryHandler(const geometry_msgs::PoseStamped::ConstPtr& odom)
 
   // publish odometry messages
   odomData.header.frame_id = "map";
-  odomData.child_frame_id = "front_laser";
+  odomData.child_frame_id = frame_laser;
   pubOdometryPointer->publish(odomData);
 
   // publish tf messages
   odomTrans.stamp_ = odom->header.stamp;
   odomTrans.frame_id_ = "map";
-  odomTrans.child_frame_id_ = "front_laser";
+  odomTrans.child_frame_id_ = frame_laser;
   odomTrans.setRotation(tf::Quaternion(geoQuat.x, geoQuat.y, geoQuat.z, geoQuat.w));
   odomTrans.setOrigin(tf::Vector3(odomData.pose.pose.position.x, odomData.pose.pose.position.y, odomData.pose.pose.position.z));
 
@@ -78,7 +79,7 @@ void odometryHandler(const geometry_msgs::PoseStamped::ConstPtr& odom)
     if (!reverseTF) {
       tfBroadcasterPointer->sendTransform(odomTrans);
     } else {
-      tfBroadcasterPointer->sendTransform(tf::StampedTransform(odomTrans.inverse(), odom->header.stamp, "/front_laser", "/map"));
+      tfBroadcasterPointer->sendTransform(tf::StampedTransform(odomTrans.inverse(), odom->header.stamp, frame_laser, "/map"));
     }
   }
 }
@@ -118,18 +119,19 @@ int main(int argc, char** argv)
   nhPrivate.getParam("flipRegisteredScan", flipRegisteredScan);
   nhPrivate.getParam("sendTF", sendTF);
   nhPrivate.getParam("reverseTF", reverseTF);
+  nhPrivate.getParam("frame_laser", frame_laser);
 
   ros::Subscriber subOdometry = nh.subscribe<geometry_msgs::PoseStamped> (stateEstimationTopic, 5, odometryHandler);
 
   ros::Subscriber subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2> (registeredScanTopic, 5, laserCloudHandler);
 
-  ros::Publisher pubOdometry = nh.advertise<nav_msgs::Odometry> ("/state_estimation", 5);
+  ros::Publisher pubOdometry = nh.advertise<nav_msgs::Odometry> ("state_estimation", 5);
   pubOdometryPointer = &pubOdometry;
 
   tf::TransformBroadcaster tfBroadcaster;
   tfBroadcasterPointer = &tfBroadcaster;
 
-  ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2> ("/registered_scan", 5);
+  ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2> ("registered_scan", 5);
   pubLaserCloudPointer = &pubLaserCloud;
 
   ros::spin();

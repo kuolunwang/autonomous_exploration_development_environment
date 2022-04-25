@@ -226,15 +226,15 @@ int main(int argc, char** argv)
   nhPrivate.getParam("autonomySpeed", autonomySpeed);
   nhPrivate.getParam("joyToSpeedDelay", joyToSpeedDelay);
 
-  ros::Subscriber subOdom = nh.subscribe<nav_msgs::Odometry> ("/state_estimation", 5, odomHandler);
+  ros::Subscriber subOdom = nh.subscribe<nav_msgs::Odometry> ("state_estimation", 5, odomHandler);
 
-  ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
+  ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("path", 5, pathHandler);
 
-  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot/joy_teleop/joy", 5, joystickHandler);
+  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
 
-  ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
+  ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("speed", 5, speedHandler);
 
-  ros::Subscriber subStop = nh.subscribe<std_msgs::Int8> ("/stop", 5, stopHandler);
+  ros::Subscriber subStop = nh.subscribe<std_msgs::Int8> ("stop", 5, stopHandler);
 
   ros::Publisher pubSpeed = nh.advertise<geometry_msgs::Twist> (cmd_velTopic, 5);
   geometry_msgs::Twist cmd_vel;

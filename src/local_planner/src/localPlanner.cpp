@@ -34,6 +34,7 @@ const double PI = 3.1415926;
 #define PLOTPATHSET 1
 
 string pathFolder;
+string frame;
 double vehicleLength = 0.6;
 double vehicleWidth = 0.6;
 double sensorOffsetX = 0;
@@ -239,6 +240,7 @@ void goalHandler(const geometry_msgs::PoseStamped::ConstPtr& goal)
 {
   goalX = goal->pose.position.x;
   goalY = goal->pose.position.y;
+  cout << "goalx , goaly: " << goalX << goalY << endl;
 }
 
 void speedHandler(const std_msgs::Float32::ConstPtr& speed)
@@ -535,33 +537,34 @@ int main(int argc, char** argv)
   nhPrivate.getParam("goalClearRange", goalClearRange);
   nhPrivate.getParam("goalX", goalX);
   nhPrivate.getParam("goalY", goalY);
+  nhPrivate.getParam("frame", frame);
 
   ros::Subscriber subOdometry = nh.subscribe<nav_msgs::Odometry>
-                                ("/state_estimation", 5, odometryHandler);
+                                ("state_estimation", 5, odometryHandler);
 
   ros::Subscriber subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>
-                                  ("/registered_scan", 5, laserCloudHandler);
+                                  ("registered_scan", 5, laserCloudHandler);
 
   ros::Subscriber subTerrainCloud = nh.subscribe<sensor_msgs::PointCloud2>
-                                    ("/terrain_map", 5, terrainCloudHandler);
+                                    ("terrain_map", 5, terrainCloudHandler);
 
   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/joy", 5, joystickHandler);
 
-  ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PoseStamped> ("/move_base_simple/goal", 5, goalHandler);
+  ros::Subscriber subGoal = nh.subscribe<geometry_msgs::PoseStamped> ("move_base_simple/goal", 5, goalHandler);
 
-  ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
+  ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("speed", 5, speedHandler);
 
-  ros::Subscriber subBoundary = nh.subscribe<geometry_msgs::PolygonStamped> ("/navigation_boundary", 5, boundaryHandler);
+  ros::Subscriber subBoundary = nh.subscribe<geometry_msgs::PolygonStamped> ("navigation_boundary", 5, boundaryHandler);
 
-  ros::Subscriber subAddedObstacles = nh.subscribe<sensor_msgs::PointCloud2> ("/added_obstacles", 5, addedObstaclesHandler);
+  ros::Subscriber subAddedObstacles = nh.subscribe<sensor_msgs::PointCloud2> ("added_obstacles", 5, addedObstaclesHandler);
 
-  ros::Subscriber subCheckObstacle = nh.subscribe<std_msgs::Bool> ("/check_obstacle", 5, checkObstacleHandler);
+  ros::Subscriber subCheckObstacle = nh.subscribe<std_msgs::Bool> ("check_obstacle", 5, checkObstacleHandler);
 
-  ros::Publisher pubPath = nh.advertise<nav_msgs::Path> ("/path", 5);
+  ros::Publisher pubPath = nh.advertise<nav_msgs::Path> ("path", 5);
   nav_msgs::Path path;
 
   #if PLOTPATHSET == 1
-  ros::Publisher pubFreePaths = nh.advertise<sensor_msgs::PointCloud2> ("/free_paths", 2);
+  ros::Publisher pubFreePaths = nh.advertise<sensor_msgs::PointCloud2> ("free_paths", 2);
   #endif
 
   //ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2> ("/stacked_scans", 2);
@@ -850,7 +853,7 @@ int main(int argc, char** argv)
           }
 
           path.header.stamp = ros::Time().fromSec(odomTime);
-          path.header.frame_id = "base_link";
+          path.header.frame_id = frame;
           pubPath.publish(path);
 
           #if PLOTPATHSET == 1
@@ -896,7 +899,7 @@ int main(int argc, char** argv)
           sensor_msgs::PointCloud2 freePaths2;
           pcl::toROSMsg(*freePaths, freePaths2);
           freePaths2.header.stamp = ros::Time().fromSec(odomTime);
-          freePaths2.header.frame_id = "base_link";
+          freePaths2.header.frame_id = frame;
           pubFreePaths.publish(freePaths2);
           #endif
         }
@@ -922,7 +925,7 @@ int main(int argc, char** argv)
         path.poses[0].pose.position.z = 0;
 
         path.header.stamp = ros::Time().fromSec(odomTime);
-        path.header.frame_id = "base_link";
+        path.header.frame_id = frame;
         pubPath.publish(path);
 
         #if PLOTPATHSET == 1
@@ -930,7 +933,7 @@ int main(int argc, char** argv)
         sensor_msgs::PointCloud2 freePaths2;
         pcl::toROSMsg(*freePaths, freePaths2);
         freePaths2.header.stamp = ros::Time().fromSec(odomTime);
-        freePaths2.header.frame_id = "base_link";
+        freePaths2.header.frame_id = frame;
         pubFreePaths.publish(freePaths2);
         #endif
       }
@@ -938,7 +941,7 @@ int main(int argc, char** argv)
       /*sensor_msgs::PointCloud2 plannerCloud2;
       pcl::toROSMsg(*plannerCloudCrop, plannerCloud2);
       plannerCloud2.header.stamp = ros::Time().fromSec(odomTime);
-      plannerCloud2.header.frame_id = "/base_link";
+      plannerCloud2.header.frame_id = "/frame_id";
       pubLaserCloud.publish(plannerCloud2);*/
     }
 

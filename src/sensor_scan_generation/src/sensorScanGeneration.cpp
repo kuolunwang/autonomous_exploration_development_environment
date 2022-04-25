@@ -22,6 +22,7 @@ using namespace std;
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr laserCloudIn(new pcl::PointCloud<pcl::PointXYZ>());
 pcl::PointCloud<pcl::PointXYZ>::Ptr laserCLoudInSensorFrame(new pcl::PointCloud<pcl::PointXYZ>());
+string frame_sensor;
 
 double robotX = 0;
 double robotY = 0;
@@ -77,18 +78,18 @@ void laserCloudAndOdometryHandler(const nav_msgs::Odometry::ConstPtr& odometry,
 
   odometryIn.header.stamp = laserCloud2->header.stamp;
   odometryIn.header.frame_id = "map";
-  odometryIn.child_frame_id = "/sensor_at_scan";
+  odometryIn.child_frame_id = frame_sensor;
   pubOdometryPointer->publish(odometryIn);
 
   transformToMap.stamp_ = laserCloud2->header.stamp;
   transformToMap.frame_id_ = "map";
-  transformToMap.child_frame_id_ = "/sensor_at_scan";
+  transformToMap.child_frame_id_ = frame_sensor;
   tfBroadcasterPointer->sendTransform(transformToMap);
 
   sensor_msgs::PointCloud2 scan_data;
   pcl::toROSMsg(*laserCLoudInSensorFrame, scan_data);
   scan_data.header.stamp = laserCloud2->header.stamp;
-  scan_data.header.frame_id = "/sensor_at_scan";
+  scan_data.header.frame_id = frame_sensor;
   pubLaserCloud.publish(scan_data);
 }
 
@@ -98,24 +99,25 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   ros::NodeHandle nhPrivate = ros::NodeHandle("~");
 
+  nhPrivate.getParam("frame_sensor", frame_sensor);
   // ROS message filters
   message_filters::Subscriber<nav_msgs::Odometry> subOdometry;
   message_filters::Subscriber<sensor_msgs::PointCloud2> subLaserCloud;
   typedef message_filters::sync_policies::ApproximateTime<nav_msgs::Odometry, sensor_msgs::PointCloud2> syncPolicy;
   typedef message_filters::Synchronizer<syncPolicy> Sync;
   boost::shared_ptr<Sync> sync_;
-  subOdometry.subscribe(nh, "/state_estimation", 1);
-  subLaserCloud.subscribe(nh, "/registered_scan", 1);
+  subOdometry.subscribe(nh, "state_estimation", 1);
+  subLaserCloud.subscribe(nh, "registered_scan", 1);
   sync_.reset(new Sync(syncPolicy(100), subOdometry, subLaserCloud));
   sync_->registerCallback(boost::bind(laserCloudAndOdometryHandler, _1, _2));
 
-  ros::Publisher pubOdometry = nh.advertise<nav_msgs::Odometry> ("/state_estimation_at_scan", 5);
+  ros::Publisher pubOdometry = nh.advertise<nav_msgs::Odometry> ("state_estimation_at_scan", 5);
   pubOdometryPointer = &pubOdometry;
 
   tf::TransformBroadcaster tfBroadcaster;
   tfBroadcasterPointer = &tfBroadcaster;
 
-  pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/sensor_scan", 2);
+  pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("sensor_scan", 2);
 
   ros::spin();
 
