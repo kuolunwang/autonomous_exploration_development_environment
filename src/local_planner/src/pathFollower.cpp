@@ -31,7 +31,7 @@ using namespace std;
 const double PI = 3.1415926;
 
 string cmd_velTopic = "/robot/husky_velocity_controller/cmd_vel";
-
+string which_car;
 double sensorOffsetX = 0;
 double sensorOffsetY = 0;
 int pubSkipNum = 1;
@@ -94,6 +94,10 @@ bool navFwd = true;
 double switchTime = 0;
 
 bool flag = 0;
+bool now_is_this_car = 0;
+float manual_x = 0;
+float manual_z = 0;
+
 nav_msgs::Path path;
 
 void odomHandler(const nav_msgs::Odometry::ConstPtr& odomIn)
@@ -140,16 +144,38 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
   pathPointID = 0;
   pathInit = true;
 }
-
+// 
 void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
 {
-  if(joy->buttons[6]==1){
-    cout<<"switch to manual"<<endl;
+  cout << "now_is_this_car" << which_car <<":"<<now_is_this_car<<endl;
+  if (which_car=="robot1"){
+    if(joy->buttons[3]==1) now_is_this_car = 1;
+    if(joy->buttons[1]==1) now_is_this_car = 0;
+    if(joy->buttons[0]==1) now_is_this_car = 0;
+  }
+  if (which_car=="robot2"){
+    if(joy->buttons[3]==1) now_is_this_car = 0;
+    if(joy->buttons[1]==1) now_is_this_car = 1;
+    if(joy->buttons[0]==1) now_is_this_car = 0;
+  }
+  if (which_car=="robot3"){
+    if(joy->buttons[3]==1) now_is_this_car = 0;
+    if(joy->buttons[1]==1) now_is_this_car = 0;
+    if(joy->buttons[0]==1) now_is_this_car = 1;
+  }
+  if(joy->buttons[6]==1 && now_is_this_car){
+    cout<<which_car<<" switch to manual"<<endl;
     flag = 0;
   }
-  if(joy->buttons[7]==1){
-    cout<<"switch to auto"<<endl;
+  if(joy->buttons[7]==1 && now_is_this_car){
+    cout<<which_car<<" switch to auto"<<endl;
     flag = 1;
+  }
+
+  if(!flag){
+    manual_x = joy->axes[1];
+    manual_z = joy->axes[0];
+    // cout<<which_car<<" manual "<<cmd_vel.linear.x<<","<<cmd_vel.angular.z<<endl;
   }
   // joyTime = ros::Time::now().toSec();
   //
@@ -225,11 +251,12 @@ int main(int argc, char** argv)
   nhPrivate.getParam("autonomyMode", autonomyMode);
   nhPrivate.getParam("autonomySpeed", autonomySpeed);
   nhPrivate.getParam("joyToSpeedDelay", joyToSpeedDelay);
+  nhPrivate.getParam("which_car", which_car);
 
   ros::Subscriber subOdom = nh.subscribe<nav_msgs::Odometry> ("state_estimation", 5, odomHandler);
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("path", 5, pathHandler);
-
+// sub other topic
   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("speed", 5, speedHandler);
@@ -349,6 +376,12 @@ int main(int argc, char** argv)
         else cmd_vel.linear.x = vehicleSpeed;
         cmd_vel.angular.z = vehicleYawRate;
         if(flag) pubSpeed.publish(cmd_vel);
+        if ((!flag) && now_is_this_car){
+          cmd_vel.linear.x = manual_x;
+          cmd_vel.angular.z = manual_z;
+          pubSpeed.publish(cmd_vel);
+          cout<<which_car<<" manual "<<cmd_vel.linear.x<<","<<cmd_vel.angular.z<<endl;
+        }
 
         pubSkipCount = pubSkipNum;
       }

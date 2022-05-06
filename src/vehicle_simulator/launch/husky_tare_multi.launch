@@ -16,6 +16,7 @@
       <arg name="goalY" value="$(arg vehicleY)"/>
       <arg name="cmd_velTopic" value="$(arg cmd_velTopic)" />
       <arg name="frame" value="$(arg veh)/base_link"/>
+      <arg name="which_car" value="$(arg veh)"/>
     </include>
 
     <include file="$(find terrain_analysis)/launch/terrain_analysis.launch" />
