@@ -10,6 +10,7 @@
 
 #include <std_msgs/Int8.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
@@ -144,7 +145,43 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
   pathPointID = 0;
   pathInit = true;
 }
-// 
+
+//ros::Subscriber subvrcontroller = nh.subscribe<std_msgs::Float32MultiArray> ("vr/joystick_xy", 5, vrjoystickHandler);
+void vrjoystickHandler(const std_msgs::Float32MultiArray::ConstPtr& joy)
+{
+  cout << "now_is_this_car" << which_car <<":"<<now_is_this_car<<endl;
+  if (which_car=="robot1"){
+    if(joy->data[2]==1) now_is_this_car = 1;
+    if(joy->data[3]==1) now_is_this_car = 0;
+    if(joy->data[4]==1) now_is_this_car = 0;
+  }
+  if (which_car=="robot2"){
+    if(joy->data[2]==1) now_is_this_car = 0;
+    if(joy->data[3]==1) now_is_this_car = 1;
+    if(joy->data[4]==1) now_is_this_car = 0;
+  }
+  if (which_car=="robot3"){
+    if(joy->data[2]==1) now_is_this_car = 0;
+    if(joy->data[3]==1) now_is_this_car = 0;
+    if(joy->data[4]==1) now_is_this_car = 1;
+  }
+  if(joy->data[7]==1 && now_is_this_car){
+    cout<<which_car<<" switch to manual"<<endl;
+    flag = 0;
+  }
+  if(joy->data[6]==1 && now_is_this_car){
+    cout<<which_car<<" switch to auto"<<endl;
+    flag = 1;
+  }
+
+  if(!flag){
+    manual_x = joy->data[1];
+    manual_z = -joy->data[0];
+    // cout<<which_car<<" manual "<<cmd_vel.linear.x<<","<<cmd_vel.angular.z<<endl;
+  }
+}
+
+//   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
 void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
 {
   cout << "now_is_this_car" << which_car <<":"<<now_is_this_car<<endl;
@@ -257,6 +294,8 @@ int main(int argc, char** argv)
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("path", 5, pathHandler);
 // sub other topic
+  ros::Subscriber subvrcontroller = nh.subscribe<std_msgs::Float32MultiArray> ("/vr/joystick_xy", 5, vrjoystickHandler);
+
   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("speed", 5, speedHandler);
