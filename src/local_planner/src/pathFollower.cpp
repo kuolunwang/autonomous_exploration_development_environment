@@ -182,58 +182,58 @@ void vrjoystickHandler(const std_msgs::Float32MultiArray::ConstPtr& joy)
 }
 
 //   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
-void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
-{
-  cout << "now_is_this_car" << which_car <<":"<<now_is_this_car<<endl;
-  if (which_car=="robot1"){
-    if(joy->buttons[3]==1) now_is_this_car = 1;
-    if(joy->buttons[1]==1) now_is_this_car = 0;
-    if(joy->buttons[0]==1) now_is_this_car = 0;
-  }
-  if (which_car=="robot2"){
-    if(joy->buttons[3]==1) now_is_this_car = 0;
-    if(joy->buttons[1]==1) now_is_this_car = 1;
-    if(joy->buttons[0]==1) now_is_this_car = 0;
-  }
-  if (which_car=="robot3"){
-    if(joy->buttons[3]==1) now_is_this_car = 0;
-    if(joy->buttons[1]==1) now_is_this_car = 0;
-    if(joy->buttons[0]==1) now_is_this_car = 1;
-  }
-  if(joy->buttons[6]==1 && now_is_this_car){
-    cout<<which_car<<" switch to manual"<<endl;
-    flag = 0;
-  }
-  if(joy->buttons[7]==1 && now_is_this_car){
-    cout<<which_car<<" switch to auto"<<endl;
-    flag = 1;
-  }
+// void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
+// {
+//   cout << "now_is_this_car" << which_car <<":"<<now_is_this_car<<endl;
+//   if (which_car=="robot1"){
+//     if(joy->buttons[3]==1) now_is_this_car = 1;
+//     if(joy->buttons[1]==1) now_is_this_car = 0;
+//     if(joy->buttons[0]==1) now_is_this_car = 0;
+//   }
+//   if (which_car=="robot2"){
+//     if(joy->buttons[3]==1) now_is_this_car = 0;
+//     if(joy->buttons[1]==1) now_is_this_car = 1;
+//     if(joy->buttons[0]==1) now_is_this_car = 0;
+//   }
+//   if (which_car=="robot3"){
+//     if(joy->buttons[3]==1) now_is_this_car = 0;
+//     if(joy->buttons[1]==1) now_is_this_car = 0;
+//     if(joy->buttons[0]==1) now_is_this_car = 1;
+//   }
+//   if(joy->buttons[6]==1 && now_is_this_car){
+//     cout<<which_car<<" switch to manual"<<endl;
+//     flag = 0;
+//   }
+//   if(joy->buttons[7]==1 && now_is_this_car){
+//     cout<<which_car<<" switch to auto"<<endl;
+//     flag = 1;
+//   }
 
-  if(!flag){
-    manual_x = joy->axes[1];
-    manual_z = joy->axes[0];
-    // cout<<which_car<<" manual "<<cmd_vel.linear.x<<","<<cmd_vel.angular.z<<endl;
-  }
-  // joyTime = ros::Time::now().toSec();
-  //
-  // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
-  // joySpeed = joySpeedRaw;
-  // if (joySpeed > 1.0) joySpeed = 1.0;
-  // if (joy->axes[4] == 0) joySpeed = 0;
-  // joyYaw = joy->axes[3];
-  // if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
-  //
-  // if (joy->axes[4] < 0 && !twoWayDrive) {
-  //   joySpeed = 0;
-  //   joyYaw = 0;
-  // }
-  //
-  // if (joy->axes[2] > -0.1) {
-  //   autonomyMode = false;
-  // } else {
-  //   autonomyMode = true;
-  // }
-}
+//   if(!flag){
+//     manual_x = joy->axes[1];
+//     manual_z = joy->axes[0];
+//     // cout<<which_car<<" manual "<<cmd_vel.linear.x<<","<<cmd_vel.angular.z<<endl;
+//   }
+//   // joyTime = ros::Time::now().toSec();
+//   //
+//   // joySpeedRaw = sqrt(joy->axes[3] * joy->axes[3] + joy->axes[4] * joy->axes[4]);
+//   // joySpeed = joySpeedRaw;
+//   // if (joySpeed > 1.0) joySpeed = 1.0;
+//   // if (joy->axes[4] == 0) joySpeed = 0;
+//   // joyYaw = joy->axes[3];
+//   // if (joySpeed == 0 && noRotAtStop) joyYaw = 0;
+//   //
+//   // if (joy->axes[4] < 0 && !twoWayDrive) {
+//   //   joySpeed = 0;
+//   //   joyYaw = 0;
+//   // }
+//   //
+//   // if (joy->axes[2] > -0.1) {
+//   //   autonomyMode = false;
+//   // } else {
+//   //   autonomyMode = true;
+//   // }
+// }
 
 void speedHandler(const std_msgs::Float32::ConstPtr& speed)
 {
@@ -296,7 +296,7 @@ int main(int argc, char** argv)
 // sub other topic
   ros::Subscriber subvrcontroller = nh.subscribe<std_msgs::Float32MultiArray> ("/vr/joystick_xy", 5, vrjoystickHandler);
 
-  ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
+  // ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot1/joy_teleop/joy", 5, joystickHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("speed", 5, speedHandler);
 
