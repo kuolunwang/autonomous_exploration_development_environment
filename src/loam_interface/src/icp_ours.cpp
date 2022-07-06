@@ -5,7 +5,6 @@
 #include <tf/transform_listener.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Joy.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_types.h>
@@ -34,22 +33,22 @@ private:
     tf::StampedTransform tf_pose;
     Eigen::Matrix4f pose_matrix;
     Eigen::Matrix4f camera_init_to_map;
-    float x,y;
+
     float x_range = 10;
     float y_range = 10;
     float z_range = 20;
-    float leaf_size = 0.4;
+    float leaf_size = 0.2;
     bool flag = 0;
-    sensor_msgs::PointCloud2 ros_map, ros_point, ros_map_all_part;
-    PointCloud<PointXYZ>::Ptr pc, map, map_all_part;
+    sensor_msgs::PointCloud2 ros_map, ros_point;
+    PointCloud<PointXYZ>::Ptr pc;
+    PointCloud<PointXYZ>::Ptr map;
 
-    Publisher pub_map, pub_point, pub_map_all_part;
-    Subscriber sub_map, joy_sub_, sub_pose;
+    Publisher pub_map, pub_point;
+    Subscriber sub_map, joy_sub_;
 
 public:
     void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
     void pc_cb(const sensor_msgs::PointCloud2 msg);
-    void pose_cb(const geometry_msgs::PoseStamped pose);
     MapFilter(NodeHandle &nh);
     ~MapFilter();
 };
@@ -63,13 +62,11 @@ MapFilter::MapFilter(NodeHandle &nh)
 
     ros_map.header.frame_id = "map";
     ros_point.header.frame_id = "map";
-    ros_map_all_part.header.frame_id = "map";
     pc.reset(new PointCloud<PointXYZ>);
     map.reset(new PointCloud<PointXYZ>);
     passX.setFilterFieldName("x");
     passY.setFilterFieldName("y");
     passZ.setFilterFieldName("z");
-
     passZ.setFilterLimits(0.3,0.8);
     voxel.setLeafSize(leaf_size, leaf_size, leaf_size);
     icp.setMaxCorrespondenceDistance(1);
@@ -80,24 +77,13 @@ MapFilter::MapFilter(NodeHandle &nh)
 
     pub_map = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_all", 1);
     pub_point = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_part", 1);
-    pub_map_all_part = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_all_part", 1);
-    sub_map = nh.subscribe("/visualize_map", 1, &MapFilter::pc_cb, this);
+    sub_map = nh.subscribe("/robot/lidar_crop", 1, &MapFilter::pc_cb, this);
     joy_sub_ = nh.subscribe("/robot/joy_teleop/joy", 10, &MapFilter::joyCallback, this);
-    sub_pose = nh.subscribe("/robot/truth_map_posestamped", 10, &MapFilter::pose_cb, this);
     ROS_INFO("map filter initialized");
 }
 
 MapFilter::~MapFilter()
 {
-}
-
-
-void MapFilter::pose_cb(const geometry_msgs::PoseStamped pose)
-{
-
-  x = pose.pose.position.x;
-  y = pose.pose.position.y;
-  // cout<<"cb pose"<<x<<","<<y<<endl;
 }
 
 void MapFilter::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
@@ -130,7 +116,6 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     pcl_ros::transformAsMatrix(tf_pose, pose_matrix);
     pcl::transformPointCloud(*pc, *pc, pose_matrix);
 
-
     if(map->size()>0){
         icp.setInputSource(pc);
         icp.setInputTarget(map);
@@ -141,9 +126,13 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     }
 
     if(flag) *map += *pc;
-    // pcl::io::savePLYFileBinary("/home/arg/autonomous_exploration_development_environment/ee6f_map.ply", *map);
+    // pcl::io::savePLYFileBinary("/home/arg/autonomous_exploration_development_environment/mazeT_map.ply", *map);
+    passZ.filter(*map);
+
+
     voxel.setInputCloud(map);
     voxel.filter(*map);
+
     ROS_INFO("filtered cloud numbers %d", map->size());
 
     toROSMsg(*map, ros_map);
@@ -154,6 +143,8 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     ros_point.header.frame_id = "map";
     ros_point.header.stamp = msg.header.stamp;
     pub_point.publish(ros_point);
+
+    // sleep(5);
 }
 
 int main(int argc, char **argv)

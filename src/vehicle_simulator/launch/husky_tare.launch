@@ -1,6 +1,6 @@
 <launch>
   <arg name="posestamp_topic" default="/robot/truth_map_posestamped" />
-  <arg name="point_topic" default="/robot/map_part" />
+  <arg name="point_topic" default="/robot/map_mazeT" />
   <arg name="cmd_velTopic" default="/robot/husky_velocity_controller/cmd_vel"/>
 
   <arg name="cameraOffsetZ" default="0"/>
@@ -24,7 +24,7 @@
 
   <include file="$(find sensor_scan_generation)/launch/sensor_scan_generation.launch" />
 
-  <include file="$(find loam_interface)/launch/loam_interface.launch" >
+  <include file="$(find loam_interface)/launch/loam_interface_ours.launch" >
     <arg name="posestamp_topic" value="$(arg posestamp_topic)" />
     <arg name="point_topic" value="$(arg point_topic)" />
   </include>

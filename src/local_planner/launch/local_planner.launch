@@ -54,7 +54,7 @@
     <param name="goalY" type="double" value="$(arg goalY)" />
   </node>
 
-  <node pkg="local_planner" type="pathFollower" name="pathFollower" output="screen" required="true">
+  <node pkg="local_planner" type="pathFollower" name="pathFollower" output="screen" required="true" >
     <param name="cmd_velTopic" value="$(arg cmd_velTopic)" />
     <param name="sensorOffsetX" value="$(arg sensorOffsetX)" />
     <param name="sensorOffsetY" value="$(arg sensorOffsetY)" />

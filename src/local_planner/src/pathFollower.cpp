@@ -10,6 +10,7 @@
 
 #include <std_msgs/Int8.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/String.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
@@ -141,6 +142,26 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
   pathInit = true;
 }
 
+void stateHandler(const std_msgs::String::ConstPtr& str)
+{
+  if(str->data == "nav_door"){ 
+    cout << "switch to auto" << endl;
+    flag = 1;
+  }
+  else if(str->data == "nav_goal_1"){
+    cout << "switch to auto" << endl;
+    flag = 1;
+  }
+  else if(str->data == "nav_goal_2"){
+    cout << "switch to auto" << endl;
+    flag = 1;
+  }
+  else if(str->data == "stop"){
+    cout<<"switch to manual"<<endl;
+    flag = 0;
+  }
+}
+
 void joystickHandler(const sensor_msgs::Joy::ConstPtr& joy)
 {
   if(joy->buttons[6]==1){
@@ -231,6 +252,8 @@ int main(int argc, char** argv)
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
 
   ros::Subscriber subJoystick = nh.subscribe<sensor_msgs::Joy> ("/robot/joy_teleop/joy", 5, joystickHandler);
+
+  ros::Subscriber substate = nh.subscribe<std_msgs::String> ("/state", 5, stateHandler);
 
   ros::Subscriber subSpeed = nh.subscribe<std_msgs::Float32> ("/speed", 5, speedHandler);
 
