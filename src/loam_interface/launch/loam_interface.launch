@@ -2,9 +2,11 @@
   <arg name="posestamp_topic" default="/X1/truth_map_posestamped" />
   <arg name="point_topic" default="/X1/map_point" />
   <arg name="frame_laser" default="/X1/front_laser"/>
+  <arg name="points_topic" default="lidar_crop"/>
 
   <node pkg="loam_interface" type="icp" name="icp" output="screen" required="true" >
     <param name="frame_laser" type="string" value="$(arg frame_laser)" />
+    <remap from="lidar_crop" to="$(arg points_topic)"/>
   </node>
   <node pkg="loam_interface" type="loamInterface" name="loamInterface" output="screen" required="true">
     <param name="stateEstimationTopic" type="string" value="$(arg posestamp_topic)" />

@@ -1,0 +1,41 @@
+<launch>
+	<arg name="veh" default="robot1" />
+	<arg name="posestamp_topic" default="/$(arg veh)/truth_map_posestamped" />
+	<arg name="point_topic" default="/$(arg veh)/map_part" />
+	<arg name="cmd_velTopic" default="/$(arg veh)/x2_velocity_controller/cmd_vel"/>
+
+	<arg name="cameraOffsetZ" default="0"/>
+	<arg name="vehicleY" default="0"/>
+	<arg name="vehicleX" default="0"/>
+	<arg name="checkTerrainConn" default="false"/>
+
+	<group ns="$(arg veh)">
+		<include file="$(find local_planner)/launch/local_planner.launch" >
+			<arg name="cameraOffsetZ" value="$(arg cameraOffsetZ)"/>
+			<arg name="goalX" value="$(arg vehicleX)"/>
+			<arg name="goalY" value="$(arg vehicleY)"/>
+			<arg name="cmd_velTopic" value="$(arg cmd_velTopic)" />
+			<arg name="frame" value="$(arg veh)/base_link"/>
+			<arg name="which_car" value="$(arg veh)"/>
+		</include>
+
+		<include file="$(find terrain_analysis)/launch/terrain_analysis.launch" />
+
+		<include file="$(find terrain_analysis_ext)/launch/terrain_analysis_ext.launch" >
+			<arg name="checkTerrainConn" value="$(arg checkTerrainConn)"/>
+		</include>
+
+		<include file="$(find sensor_scan_generation)/launch/sensor_scan_generation.launch" >
+			<arg name="frame_sensor" value="$(arg veh)/sensor_at_scan"/>
+		</include>
+
+		<include file="$(find loam_interface)/launch/loam_interface.launch" >
+			<arg name="posestamp_topic" value="$(arg posestamp_topic)" />
+			<arg name="point_topic" value="$(arg point_topic)" />
+			<arg name="frame_laser" value="$(arg veh)/front_laser"/>
+			<arg name="points_topic" value="points"/>
+		</include>
+	</group>
+
+
+</launch>
