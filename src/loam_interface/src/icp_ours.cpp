@@ -126,7 +126,8 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     }
 
     if(flag) *map += *pc;
-    // pcl::io::savePLYFileBinary("/home/arg/autonomous_exploration_development_environment/mazeT_map.ply", *map);
+    // pcl::io::savePLYFileBinary("/home/arg/autonomous_exploration_development_environment/ignored_door_map.ply", *map);
+    // pcl::io::savePLYFileBinary("/home/arg/autonomous_exploration_development_environment/opened_map.ply", *map);
     passZ.filter(*map);
 
 

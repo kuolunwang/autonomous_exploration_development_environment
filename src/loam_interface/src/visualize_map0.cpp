@@ -44,8 +44,8 @@ Visualize_map::Visualize_map(NodeHandle &nh)
 {
     ros_map.header.frame_id = "map";
     cloud.reset(new PointCloud<PointXYZ>);
-    pub_map = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_mazeT", 1);
-    Reader.read("/home/arg/autonomous_exploration_development_environment/mazeT_map.ply", *cloud);
+    pub_map = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_opened", 1);
+    Reader.read("/home/arg/autonomous_exploration_development_environment/opened_map.ply", *cloud);
     toROSMsg(*cloud, ros_map);
 
     timer = nh.createTimer(ros::Duration(0.1), &Visualize_map::callback, this);

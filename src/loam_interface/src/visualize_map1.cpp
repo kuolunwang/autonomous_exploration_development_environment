@@ -44,8 +44,8 @@ Visualize_map::Visualize_map(NodeHandle &nh)
 {
     ros_map.header.frame_id = "map";
     cloud.reset(new PointCloud<PointXYZ>);
-    pub_map = nh.advertise<sensor_msgs::PointCloud2>("visualize_map", 1);
-    Reader.read("/home/arg/autonomous_exploration_development_environment/ee6f_map.ply", *cloud);
+    pub_map = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_ignored", 1);
+    Reader.read("/home/arg/autonomous_exploration_development_environment/ignored_door_map.ply", *cloud);
     toROSMsg(*cloud, ros_map);
 
     timer = nh.createTimer(ros::Duration(0.1), &Visualize_map::callback, this);
@@ -63,7 +63,7 @@ void Visualize_map::callback(const ros::TimerEvent& event){
 }
 int main(int argc, char **argv)
 {
-    init(argc, argv, "Visualize_map");
+    init(argc, argv, "mappartttt");
     NodeHandle nh;
     Visualize_map vm(nh);
     spin();

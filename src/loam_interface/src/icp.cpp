@@ -81,7 +81,7 @@ MapFilter::MapFilter(NodeHandle &nh)
     pub_map = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_all", 1);
     pub_point = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_part", 1);
     pub_map_all_part = nh.advertise<sensor_msgs::PointCloud2>("/robot/map_all_part", 1);
-    sub_map = nh.subscribe("/visualize_map", 1, &MapFilter::pc_cb, this);
+    sub_map = nh.subscribe("/robot/lidar_crop", 1, &MapFilter::pc_cb, this);
     joy_sub_ = nh.subscribe("/robot/joy_teleop/joy", 10, &MapFilter::joyCallback, this);
     sub_pose = nh.subscribe("/robot/truth_map_posestamped", 10, &MapFilter::pose_cb, this);
     ROS_INFO("map filter initialized");
@@ -141,7 +141,6 @@ void MapFilter::pc_cb(const sensor_msgs::PointCloud2 msg)
     }
 
     if(flag) *map += *pc;
-    // pcl::io::savePLYFileBinary("/home/arg/autonomous_exploration_development_environment/ee6f_map.ply", *map);
     voxel.setInputCloud(map);
     voxel.filter(*map);
     ROS_INFO("filtered cloud numbers %d", map->size());
