@@ -52,15 +52,15 @@ link_directories(
 add_executable(loamInterface src/loamInterface.cpp)
 add_executable(icp src/icp.cpp)
 add_executable(icp_ours src/icp_ours.cpp)
-add_executable(visualize_map src/visualize_map.cpp)
 add_executable(visualize_map0 src/visualize_map0.cpp)
+add_executable(visualize_map1 src/visualize_map1.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(loamInterface ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(icp ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(icp_ours ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-target_link_libraries(visualize_map ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(visualize_map0 ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(visualize_map1 ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 install(TARGETS loamInterface
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

@@ -1,13 +1,14 @@
 <launch>
   <arg name="posestamp_topic" default="/robot/truth_map_posestamped" />
-  <arg name="point_topic" default="/robot/map_mazeT" />
   <arg name="cmd_velTopic" default="/robot/husky_velocity_controller/cmd_vel"/>
 
   <arg name="cameraOffsetZ" default="0"/>
   <arg name="vehicleX" default="0"/>
   <arg name="vehicleY" default="0"/>
   <arg name="checkTerrainConn" default="false"/>
-
+  <arg name="normal" default="true"/>
+  <arg name="ignored" default="true"/>
+  <arg name="opened" default="false"/>
 
   <include file="$(find local_planner)/launch/local_planner.launch" >
     <arg name="cameraOffsetZ" value="$(arg cameraOffsetZ)"/>
@@ -24,10 +25,31 @@
 
   <include file="$(find sensor_scan_generation)/launch/sensor_scan_generation.launch" />
 
-  <include file="$(find loam_interface)/launch/loam_interface_ours.launch" >
-    <arg name="posestamp_topic" value="$(arg posestamp_topic)" />
-    <arg name="point_topic" value="$(arg point_topic)" />
-  </include>
+  <group if="$(arg normal)">
+    <include file="$(find loam_interface)/launch/loam_interface.launch" >
+      <arg name="posestamp_topic" value="$(arg posestamp_topic)" />
+      <arg name="point_topic" value="/robot/map_part" />
+    </include>
+  </group>
 
+  <group unless="$(arg normal)">
+
+    <group if="$(arg ignored)">
+      <include file="$(find loam_interface)/launch/loam_interface_ours.launch" >
+        <arg name="posestamp_topic" value="$(arg posestamp_topic)" />
+        <arg name="point_topic" value="/robot/map_ignored" />
+        <arg name="ignored" value="true"/>
+      </include>
+    </group>
+
+    <group if="$(arg opened)">
+      <include file="$(find loam_interface)/launch/loam_interface_ours.launch" >
+        <arg name="posestamp_topic" value="$(arg posestamp_topic)" />
+        <arg name="point_topic" value="/robot/map_opened" />
+        <arg name="ignored" value="false"/>
+      </include>
+    </group>
+
+  </group>
 
 </launch>
