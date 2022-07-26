@@ -1,23 +1,41 @@
-# How to run this repo with our robot (Husky) in gazebo
+# How to run this repo with our robot (Husky_UR5) in gazebo
 
-`roslaunch vehicle_simulator husky_tare.launch cmd_velTopic:=/robot/husky_velocity_controller/cmd_vel posestamp_topic:=/slam_pose point_topic:=/map_part`
+## Clone repo
 
-* input topic
-    * /map_part (sensor_msgs/PointCloud2)
-        * lidar point with frame_id "map"
-    * /slam_pose (geometry_msgs/PoseStamped)
-        * robot's PoseStamped with frame_id "map"
-    * /move_base_simple/goal (geometry_msgs/PoseStamped)
-        * goal's PoseStamped with frame_id "map", you could click it on rviz
+Clone this repo and checkout kl branch.
 
-* output topic
-    * cmd_vel (geometry_msgs/Twist)
+```
+git clone -b kl git@github.com:ARG-NCTU/autonomous_exploration_development_environment.git
+```
 
+## Set up the Docker 
 
+The all required environment was organized, only need laptop or computer with GPU, and make sure install docker already.
 
+1. Docker Run
 
-<img src="img/header.jpg" alt="Header" width="100%"/>
+    Run this script to pull docker image to your workstation.
 
-The repository is meant for leveraging system development and robot deployment for ground-based autonomous navigation and exploration. Containing a variety of simulation environments, autonomous navigation modules such as collision avoidance, terrain traversability analysis, waypoint following, etc, and a set of visualization tools, users can develop autonomous navigation systems and later on port those systems onto real robots for deployment.
+    ```
+    source docker_run.sh
+    ```
+2. Docker Join
 
-Please use instructions on our [project page](https://www.cmu-exploration.com).
+    If want to enter same docker image, type below command.
+
+    ```
+    source docker_join.sh
+    ```
+3. Catkin_make
+
+    Execute compile script in the first time, then the other can ignore this step.
+    ```
+    catkin_make
+    ``` 
+
+4. setup environment
+
+    Make sure run this command when the terminal enter docker. 
+    ```
+    source environment.sh
+    ```
